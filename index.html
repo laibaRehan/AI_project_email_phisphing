@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Phishing Email Detection</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #4caf50;
+        }
+        form {
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 0px #000000;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
+        label, textarea {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+        }
+        textarea {
+            background-color: #2e2e2e;
+            color: #ffffff;
+            border: 1px solid #4caf50;
+            border-radius: 4px;
+            padding: 8px;
+            resize: none;
+        }
+        input[type="button"] {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        input[type="button"]:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        #graph-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 600px;
+        }
+        #graph-container {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+        #pie-chart, #bar-chart {
+            display: none;
+        }
+        canvas {
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 0px #000000;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Phishing Email Detection Model</h1>
+    <form id="emailForm">
+        <label for="email">SPAM DETECTOR:</label>
+        <textarea id="email" name="email" rows="4" cols="50"></textarea>
+        <input type="button" value="Check" onclick="checkSpam()">
+    </form>
+    <p id="result"></p>
+
+    <div id="graph-buttons">
+        <input type="button" value="Show Pie Chart" onclick="showPieChart()">
+        <input type="button" value="Show Bar Chart" onclick="showBarChart()">
+    </div>
+
+    <div id="graph-container">
+        <div id="pie-chart">
+            <canvas id="pieChartCanvas"></canvas>
+        </div>
+        <div id="bar-chart">
+            <canvas id="barChartCanvas"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function checkSpam() {
+            const email = document.getElementById("email").value;
+            fetch("/predict", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ message: email })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").innerText = data.prediction === 1 ? "Spam" : "Ham";
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        let pieChart;  // Global variable to hold the pie chart instance
+        let barChart;  // Global variable to hold the bar chart instance
+
+        function showPieChart() {
+            document.getElementById('pie-chart').style.display = 'block';
+            document.getElementById('bar-chart').style.display = 'none';
+            const ctx = document.getElementById('pieChartCanvas').getContext('2d');
+            if (pieChart) {
+                pieChart.destroy();  // Destroy previous instance to avoid overlapping
+            }
+            pieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Ham', 'Spam'],
+                    datasets: [{
+                        data: [87.6, 12.4],  // Example data, replace with real data
+                        backgroundColor: ['#4caf50', '#f44336']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+        }
+
+        function showBarChart() {
+            document.getElementById('pie-chart').style.display = 'none';
+            document.getElementById('bar-chart').style.display = 'block';
+            const ctx = document.getElementById('barChartCanvas').getContext('2d');
+            if (barChart) {
+                barChart.destroy();  // Destroy previous instance to avoid overlapping
+            }
+            barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Ham', 'Spam'],
+                    datasets: [{
+                        label: '# of Emails',
+                        data: [87.6, 12.4],  // Example data, replace with real data
+                        backgroundColor: ['#4caf50', '#f44336']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+
+
